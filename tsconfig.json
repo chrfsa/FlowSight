@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es6",
+		"outDir": "out",
+		"lib": ["es6"],
+		"sourceMap": true,
+		"rootDir": "src",
+		"strict": true,   /* C'est ça qui te bloque sur les 'any' */
+        "noImplicitAny": false, /* ON DÉSACTIVE LA VÉRIFICATION STRICTE DES TYPES POUR ALLER VITE */
+		"esModuleInterop": true, /* LA CLÉ POUR EXPRESS */
+        "skipLibCheck": true
+	},
+	"exclude": [
+		"node_modules",
+		".vscode-test"
+	]
+}
