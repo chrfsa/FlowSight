@@ -5,11 +5,11 @@ import * as fs from 'fs';
 import cors from 'cors';
 
 let currentPanel: vscode.WebviewPanel | undefined;
-let server: any; 
+let server: any;
 
 export function activate(context: vscode.ExtensionContext) {
     const app = express();
-    app.use(express.json({ limit: '50mb' })); 
+    app.use(express.json({ limit: '50mb' }));
     app.use(cors());
 
     // --- HANDLERS ---
@@ -60,6 +60,7 @@ function getWebviewContent() {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
     <style>
         :root {
             /* Palette Dark Pro inspirée de LangSmith / VS Code */
@@ -238,7 +239,10 @@ function getWebviewContent() {
                 <div id="inspector-main">
                     <div class="panel-header" style="background:var(--bg-app); border-bottom:1px solid var(--border);">
                         <span>Node Details</span>
-                        <span class="close-btn" onclick="closeInspector()" title="Close details">✕</span>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button onclick="showGraph()" style="background:var(--bg-hover); border:1px solid var(--border); color:var(--text-muted); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:11px;">📊 Graph</button>
+                            <span class="close-btn" onclick="closeInspector()" title="Close details">✕</span>
+                        </div>
                     </div>
 
                     <div id="insp-header" class="insp-header">
@@ -297,7 +301,20 @@ function getWebviewContent() {
 
     </div>
 
+    <!-- Graph Modal -->
+    <div id="graph-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999;">
+        <div style="position:relative; width:90%; height:90%; margin:5% auto; background:var(--bg-panel); border:1px solid var(--border); border-radius:8px; display:flex; flex-direction:column;">
+            <div style="padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; color:var(--text-main);">📊 Workflow Graph</h3>
+                <button onclick="closeGraph()" style="background:var(--bg-hover); border:1px solid var(--border); color:var(--text-muted); padding:6px 12px; border-radius:4px; cursor:pointer;">✕ Close</button>
+            </div>
+            <div id="graph-content" style="flex:1; padding:20px; overflow:auto; display:flex; align-items:center; justify-content:center;"></div>
+        </div>
+    </div>
+
     <script>
+        mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+        
         const runs = {};
         const rootRuns = [];
         let selectedRootId = null;
@@ -319,8 +336,56 @@ function getWebviewContent() {
 
         function closeInspector() {
             selectedSpanId = null;
-            renderWaterfall(selectedRootId); // Enlever surbrillance
-            setViewMode('trace'); // Revenir mode 2
+            renderWaterfall(selectedRootId);
+            setViewMode('trace');
+        }
+
+        // GRAPH FUNCTIONS
+        function showGraph() {
+            if (!selectedRootId) { alert('Select a run first'); return; }
+            
+            // Priority 1: Check metadata
+            const rootRun = runs[selectedRootId];
+            let graph = rootRun?.metadata?.mermaid_graph || rootRun?.extra?.metadata?.mermaid_graph;
+            
+            // Fallback: Auto-generate
+            if (!graph) {
+                console.log('No graph in metadata, auto-generating...');
+                graph = makeGraph(selectedRootId);
+            } else {
+                console.log('✅ Using graph from metadata');
+            }
+            
+            const modal = document.getElementById('graph-modal');
+            const content = document.getElementById('graph-content');
+            modal.style.display = 'block';
+            content.innerHTML = '<div class="mermaid">' + graph + '</div>';
+            setTimeout(() => { mermaid.run({ querySelector: '.mermaid' }); }, 100);
+        }
+
+        function closeGraph() {
+            document.getElementById('graph-modal').style.display = 'none';
+        }
+
+        function makeGraph(rootId) {
+            let graph = 'graph TD\\n';
+            const seen = new Set();
+            function walk(id) {
+                if (seen.has(id)) return;
+                seen.add(id);
+                const r = runs[id];
+                if (!r) return;
+                const nid = id.slice(0,8).replace(/[^a-z0-9]/gi, '_');
+                const name = (r.name || 'node').replace(/"/g, "'");
+                graph += '    ' + nid + '["' + name + '"]\\n';
+                (r.children || []).forEach(cid => {
+                    const cnid = cid.slice(0,8).replace(/[^a-z0-9]/gi, '_');
+                    graph += '    ' + nid + ' --> ' + cnid + '\\n';
+                    walk(cid);
+                });
+            }
+            walk(rootId);
+            return graph;
         }
 
         function switchTab(tabName) {
