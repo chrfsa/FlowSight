@@ -1,0 +1,22 @@
+.git
+.vscode
+.DS_Store
+*.map
+
+# Dépendances de développement (IMPORTANT)
+node_modules/
+!node_modules/vscode/
+!node_modules/@types/
+
+# Fichiers de compilation/cache de développement
+
+dist/
+temp/
+coverage/
+
+# Fichiers Python/LangChain (si vous les gardez dans le repo)
+*.log
+*.sqlite
+__pycache__/
+venv/
+.venv
