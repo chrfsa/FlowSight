@@ -87,6 +87,37 @@ function getWebviewContent() {
             margin: 0; padding: 0; height: 100vh; overflow: hidden; font-size: 13px;
         }
 
+        /* MERMAID GRAPH STYLING */
+        .mermaid { font-family: var(--font-ui) !important; }
+        .mermaid .node rect,
+        .mermaid .node circle,
+        .mermaid .node ellipse,
+        .mermaid .node polygon { 
+            fill: var(--bg-hover) !important; 
+            stroke: var(--accent) !important; 
+            stroke-width: 2px !important;
+        }
+        .mermaid .nodeLabel,
+        .mermaid .node .label {
+            color: #ffffff !important;
+            fill: #ffffff !important;
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            text-shadow: 0 0 4px rgba(0,0,0,0.8) !important;
+        }
+        .mermaid .edgeLabel {
+            background-color: var(--bg-panel) !important;
+            color: var(--accent) !important;
+            fill: var(--accent) !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+        }
+        .mermaid .edgePath .path {
+            stroke: var(--accent) !important;
+            stroke-width: 2px !important;
+            opacity: 0.7;
+        }
+
         /* --- LAYOUT DYNAMIQUE (CSS GRID) --- */
         #app-container {
             display: grid;
@@ -171,7 +202,7 @@ function getWebviewContent() {
         #inspector-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; }
         /* Colonne Stats à Droite */
         #inspector-stats { 
-            width: 260px; background: var(--bg-panel); border-left: 1px solid var(--border); 
+            min-width: 260px; background: var(--bg-panel); border-left: 1px solid var(--border); 
             padding: 20px; overflow-y: auto; flex-shrink: 0;
         }
 
@@ -241,6 +272,7 @@ function getWebviewContent() {
                         <span>Node Details</span>
                         <div style="display:flex; gap:8px; align-items:center;">
                             <button onclick="showGraph()" style="background:var(--bg-hover); border:1px solid var(--border); color:var(--text-muted); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:11px;">📊 Graph</button>
+                            <button id="btn-stats" onclick="toggleStats()" style="background:var(--bg-hover); border:1px solid var(--border); color:var(--text-muted); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:11px;">📈 Stats</button>
                             <span class="close-btn" onclick="closeInspector()" title="Close details">✕</span>
                         </div>
                     </div>
@@ -277,7 +309,7 @@ function getWebviewContent() {
                     </div>
                 </div>
 
-                <div id="inspector-stats">
+                <div id="inspector-stats" style="display:none;">
                     <div style="margin-bottom:24px;">
                         <div class="kv-title">Start Time</div>
                         <div id="stat-start" style="font-family:var(--font-mono); font-size:12px;">-</div>
@@ -365,6 +397,20 @@ function getWebviewContent() {
 
         function closeGraph() {
             document.getElementById('graph-modal').style.display = 'none';
+        }
+
+        function toggleStats() {
+            const panel = document.getElementById('inspector-stats');
+            const btn = document.getElementById('btn-stats');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                btn.style.background = 'var(--bg-active)';
+                btn.style.color = 'var(--accent)';
+            } else {
+                panel.style.display = 'none';
+                btn.style.background = 'var(--bg-hover)';
+                btn.style.color = 'var(--text-muted)';
+            }
         }
 
         function makeGraph(rootId) {
