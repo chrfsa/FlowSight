@@ -2,7 +2,7 @@
 
 **FlowSight** is a local VS Code extension that provides "X-Ray vision" for your LangChain and LangGraph agents. It visualizes traces, metadata, and execution graphs in real-time, right next to your code.
 
-https://github.com/chrfsa/FlowSight/blob/main/media/demo.webm
+![FlowSight Demo](media/demo.gif)
 
 ## Why FlowSight?
 
